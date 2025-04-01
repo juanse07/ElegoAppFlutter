@@ -4,17 +4,18 @@ class BusyTimeSlot {
   final String id;
   final DateTime startTime; // Stored in UTC
   final DateTime endTime; // Stored in UTC
-  final String title;
-  final String description;
+  final bool isAllDay;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  // Preset message for all busy slots
+  static const String defaultMessage = 'Marked unavailable by Pro';
 
   BusyTimeSlot({
     required this.id,
     required this.startTime,
     required this.endTime,
-    required this.title,
-    this.description = '',
+    this.isAllDay = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -59,8 +60,7 @@ class BusyTimeSlot {
       id: id,
       startTime: parseDate(json['startTime']),
       endTime: parseDate(json['endTime']),
-      title: json['title'] as String? ?? 'Busy',
-      description: json['description'] as String? ?? '',
+      isAllDay: json['isAllDay'] as bool? ?? false,
       createdAt: parseDate(json['createdAt']),
       updatedAt: parseDate(json['updatedAt']),
     );
@@ -71,8 +71,7 @@ class BusyTimeSlot {
     return {
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
-      'title': title,
-      'description': description,
+      'isAllDay': isAllDay,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -97,14 +96,30 @@ class BusyTimeSlot {
 
   // Format just the time portion in local time
   String get formattedStartTime {
+    if (isAllDay) return 'All Day';
     return DateFormat('HH:mm').format(startTime.toLocal());
   }
 
   String get formattedEndTime {
+    if (isAllDay) return 'All Day';
     return DateFormat('HH:mm').format(endTime.toLocal());
   }
 
   // Get a local DateTime version for UI display
   DateTime get localStartTime => startTime.toLocal();
   DateTime get localEndTime => endTime.toLocal();
+
+  // Helper to check if a time slot is for today
+  bool get isToday {
+    final now = DateTime.now();
+    final localStart = startTime.toLocal();
+    return localStart.year == now.year &&
+        localStart.month == now.month &&
+        localStart.day == now.day;
+  }
+
+  // Helper to check if a time slot is in the past
+  bool get isPast {
+    return startTime.isBefore(DateTime.now().toUtc());
+  }
 }

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
 import '../models/calendar_model.dart';
 
@@ -39,76 +38,82 @@ class CalendarService {
     }
   }
 
-  // Create a new busy time slot
-  Future<BusyTimeSlot> createBusyTimeSlot(BusyTimeSlot timeSlot) async {
+  // Mark time slot as unavailable
+  Future<BusyTimeSlot> markUnavailable(
+    DateTime startTime,
+    DateTime endTime, {
+    bool isAllDay = false,
+  }) async {
     try {
       final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint');
 
-      // The model now ensures dates are in UTC
-      final jsonBody = timeSlot.toJson();
+      // Convert to UTC for storage
+      final startUtc = startTime.isUtc ? startTime : startTime.toUtc();
+      final endUtc = endTime.isUtc ? endTime : endTime.toUtc();
+
+      // For all-day events, set the time to start of day and end of day
+      final startDateTime =
+          isAllDay
+              ? DateTime(startUtc.year, startUtc.month, startUtc.day).toUtc()
+              : startUtc;
+      final endDateTime =
+          isAllDay
+              ? DateTime(
+                endUtc.year,
+                endUtc.month,
+                endUtc.day,
+                23,
+                59,
+                59,
+              ).toUtc()
+              : endUtc;
+
+      final timeSlot = BusyTimeSlot(
+        id: '', // ID will be assigned by the server
+        startTime: startDateTime,
+        endTime: endDateTime,
+        isAllDay: isAllDay,
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+      );
 
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(jsonBody),
+        body: jsonEncode(timeSlot.toJson()),
       );
 
       if (response.statusCode != 201) {
         throw Exception(
-          'Failed to create busy time slot: HTTP ${response.statusCode}',
+          'Failed to mark time as unavailable: HTTP ${response.statusCode}',
         );
       }
 
       return BusyTimeSlot.fromJson(jsonDecode(response.body));
     } catch (e) {
-      print('Exception during createBusyTimeSlot: $e');
+      print('Exception during markUnavailable: $e');
       rethrow;
     }
   }
 
-  // Delete a busy time slot
-  Future<void> deleteBusyTimeSlot(String id) async {
+  // Mark entire day as unavailable
+  Future<BusyTimeSlot> markDayUnavailable(DateTime date) async {
+    return markUnavailable(date, date, isAllDay: true);
+  }
+
+  // Delete a busy time slot (mark as available)
+  Future<void> markAvailable(String id) async {
     try {
       final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint/$id');
       final response = await http.delete(url);
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception(
-          'Failed to delete busy time slot: HTTP ${response.statusCode}',
+          'Failed to mark time as available: HTTP ${response.statusCode}',
         );
       }
     } catch (e) {
-      print('Exception during deleteBusyTimeSlot: $e');
-      rethrow;
-    }
-  }
-
-  // Update a busy time slot
-  Future<BusyTimeSlot> updateBusyTimeSlot(
-    String id,
-    BusyTimeSlot timeSlot,
-  ) async {
-    try {
-      final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint/$id');
-
-      // The model now ensures dates are in UTC
-      final jsonBody = timeSlot.toJson();
-
-      final response = await http.put(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(jsonBody),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Failed to update busy time slot: HTTP ${response.statusCode}',
-        );
-      }
-
-      return BusyTimeSlot.fromJson(jsonDecode(response.body));
-    } catch (e) {
-      print('Exception during updateBusyTimeSlot: $e');
+      print('Exception during markAvailable: $e');
       rethrow;
     }
   }
@@ -153,66 +158,16 @@ class CalendarService {
     }
   }
 
+  // Get busy time slots for a specific date
+  Future<List<BusyTimeSlot>> getBusyTimeSlotsForDate(DateTime date) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    return getBusyTimeSlotsForRange(startOfDay, endOfDay);
+  }
+
   // Helper method to format date for API requests
   String formatDateForApi(DateTime date) {
     final dateUtc = date.isUtc ? date : date.toUtc();
     return dateUtc.toIso8601String();
-  }
-
-  // Create a new busy time slot with formatted date/time strings
-  Future<BusyTimeSlot> createBusyTimeSlotWithStrings(
-    String date,
-    String startTime,
-    String endTime,
-    String title,
-    String description,
-  ) async {
-    try {
-      // Parse the input strings to a DateTime
-      final DateFormat dateFormat = DateFormat('yyyy-MM-dd');
-      final DateFormat timeFormat = DateFormat('HH:mm');
-
-      final DateTime parsedDate = dateFormat.parse(date);
-
-      // Parse start time and combine with date
-      final DateTime parsedStartTime = timeFormat.parse(startTime);
-      DateTime startDateTime = DateTime(
-        parsedDate.year,
-        parsedDate.month,
-        parsedDate.day,
-        parsedStartTime.hour,
-        parsedStartTime.minute,
-      );
-
-      // Parse end time and combine with date
-      final DateTime parsedEndTime = timeFormat.parse(endTime);
-      DateTime endDateTime = DateTime(
-        parsedDate.year,
-        parsedDate.month,
-        parsedDate.day,
-        parsedEndTime.hour,
-        parsedEndTime.minute,
-      );
-
-      // Convert to UTC for storage
-      startDateTime = startDateTime.toUtc();
-      endDateTime = endDateTime.toUtc();
-
-      // Create a BusyTimeSlot with the properly parsed dates in UTC
-      final timeSlot = BusyTimeSlot(
-        id: '', // ID will be assigned by the server
-        startTime: startDateTime,
-        endTime: endDateTime,
-        title: title,
-        description: description,
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-      );
-
-      return await createBusyTimeSlot(timeSlot);
-    } catch (e) {
-      print('Exception during createBusyTimeSlotWithStrings: $e');
-      rethrow;
-    }
   }
 }
