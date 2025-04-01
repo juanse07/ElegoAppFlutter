@@ -44,7 +44,7 @@ class CalendarService {
     try {
       final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint');
 
-      // Ensure all dates are properly formatted for the API
+      // The model now ensures dates are in UTC
       final jsonBody = timeSlot.toJson();
 
       final response = await http.post(
@@ -91,7 +91,7 @@ class CalendarService {
     try {
       final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint/$id');
 
-      // Ensure all dates are properly formatted for the API
+      // The model now ensures dates are in UTC
       final jsonBody = timeSlot.toJson();
 
       final response = await http.put(
@@ -119,9 +119,12 @@ class CalendarService {
     DateTime end,
   ) async {
     try {
-      // Ensure dates are in UTC ISO8601 format for the API
-      final startStr = start.toUtc().toIso8601String();
-      final endStr = end.toUtc().toIso8601String();
+      // Convert any local dates to UTC for API
+      final startUtc = start.isUtc ? start : start.toUtc();
+      final endUtc = end.isUtc ? end : end.toUtc();
+
+      final startStr = startUtc.toIso8601String();
+      final endStr = endUtc.toIso8601String();
 
       final url = Uri.parse(
         '$apiFullUrl$busyTimeSlotsEndpoint?startTime=$startStr&endTime=$endStr',
@@ -152,7 +155,8 @@ class CalendarService {
 
   // Helper method to format date for API requests
   String formatDateForApi(DateTime date) {
-    return date.toUtc().toIso8601String();
+    final dateUtc = date.isUtc ? date : date.toUtc();
+    return dateUtc.toIso8601String();
   }
 
   // Create a new busy time slot with formatted date/time strings
@@ -172,7 +176,7 @@ class CalendarService {
 
       // Parse start time and combine with date
       final DateTime parsedStartTime = timeFormat.parse(startTime);
-      final DateTime startDateTime = DateTime(
+      DateTime startDateTime = DateTime(
         parsedDate.year,
         parsedDate.month,
         parsedDate.day,
@@ -182,7 +186,7 @@ class CalendarService {
 
       // Parse end time and combine with date
       final DateTime parsedEndTime = timeFormat.parse(endTime);
-      final DateTime endDateTime = DateTime(
+      DateTime endDateTime = DateTime(
         parsedDate.year,
         parsedDate.month,
         parsedDate.day,
@@ -190,15 +194,19 @@ class CalendarService {
         parsedEndTime.minute,
       );
 
-      // Create a BusyTimeSlot with the properly parsed dates
+      // Convert to UTC for storage
+      startDateTime = startDateTime.toUtc();
+      endDateTime = endDateTime.toUtc();
+
+      // Create a BusyTimeSlot with the properly parsed dates in UTC
       final timeSlot = BusyTimeSlot(
         id: '', // ID will be assigned by the server
         startTime: startDateTime,
         endTime: endDateTime,
         title: title,
         description: description,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
       );
 
       return await createBusyTimeSlot(timeSlot);

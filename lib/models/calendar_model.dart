@@ -2,8 +2,8 @@ import 'package:intl/intl.dart';
 
 class BusyTimeSlot {
   final String id;
-  final DateTime startTime;
-  final DateTime endTime;
+  final DateTime startTime; // Stored in UTC
+  final DateTime endTime; // Stored in UTC
   final String title;
   final String description;
   final DateTime createdAt;
@@ -30,28 +30,29 @@ class BusyTimeSlot {
       id = '';
     }
 
-    // Parse dates correctly
+    // Parse dates to UTC
     DateTime parseDate(dynamic dateValue) {
-      if (dateValue == null) return DateTime.now();
+      if (dateValue == null) return DateTime.now().toUtc();
 
       try {
         if (dateValue is String) {
-          return DateTime.parse(dateValue).toLocal();
+          // Parse as UTC, but keep it as UTC
+          return DateTime.parse(dateValue);
         } else if (dateValue is Map && dateValue['\$date'] != null) {
           if (dateValue['\$date'] is String) {
-            return DateTime.parse(dateValue['\$date']).toLocal();
+            return DateTime.parse(dateValue['\$date']);
           } else if (dateValue['\$date'] is Map &&
               dateValue['\$date']['\$numberLong'] != null) {
             return DateTime.fromMillisecondsSinceEpoch(
               int.parse(dateValue['\$date']['\$numberLong']),
               isUtc: true,
-            ).toLocal();
+            );
           }
         }
       } catch (e) {
         print('Error parsing date: $e');
       }
-      return DateTime.now();
+      return DateTime.now().toUtc();
     }
 
     return BusyTimeSlot(
@@ -66,40 +67,44 @@ class BusyTimeSlot {
   }
 
   Map<String, dynamic> toJson() {
-    // Convert local time to UTC for consistent API communication
+    // Send UTC ISO8601 strings to API
     return {
-      'startTime': startTime.toUtc().toIso8601String(),
-      'endTime': endTime.toUtc().toIso8601String(),
+      'startTime': startTime.toIso8601String(),
+      'endTime': endTime.toIso8601String(),
       'title': title,
       'description': description,
-      'createdAt': createdAt.toUtc().toIso8601String(),
-      'updatedAt': updatedAt.toUtc().toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
-  // Helper method for formatting date and time for display
+  // Helper method for formatting date and time for display in local time
   String formatStartTime(String format) {
     final formatter = DateFormat(format);
-    return formatter.format(startTime);
+    return formatter.format(startTime.toLocal());
   }
 
-  // Helper method for formatting date and time for display
+  // Helper method for formatting date and time for display in local time
   String formatEndTime(String format) {
     final formatter = DateFormat(format);
-    return formatter.format(endTime);
+    return formatter.format(endTime.toLocal());
   }
 
-  // Format just the date portion
+  // Format just the date portion in local time
   String get formattedDate {
-    return DateFormat('yyyy-MM-dd').format(startTime);
+    return DateFormat('yyyy-MM-dd').format(startTime.toLocal());
   }
 
-  // Format just the time portion
+  // Format just the time portion in local time
   String get formattedStartTime {
-    return DateFormat('HH:mm').format(startTime);
+    return DateFormat('HH:mm').format(startTime.toLocal());
   }
 
   String get formattedEndTime {
-    return DateFormat('HH:mm').format(endTime);
+    return DateFormat('HH:mm').format(endTime.toLocal());
   }
+
+  // Get a local DateTime version for UI display
+  DateTime get localStartTime => startTime.toLocal();
+  DateTime get localEndTime => endTime.toLocal();
 }
