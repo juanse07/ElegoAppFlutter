@@ -19,7 +19,7 @@ class BusyTimeSlot {
 
   factory BusyTimeSlot.fromJson(Map<String, dynamic> json) {
     return BusyTimeSlot(
-      id: json['id'] as String,
+      id: json['_id'] as String,
       // Parse UTC dates from API and convert to local time
       startTime: DateTime.parse(json['startTime'] as String).toLocal(),
       endTime: DateTime.parse(json['endTime'] as String).toLocal(),
