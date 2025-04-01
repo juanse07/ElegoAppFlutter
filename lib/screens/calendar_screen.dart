@@ -175,14 +175,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  Future<void> _selectStartTime() async {
+  Future<void> _selectStartTime(
+    BuildContext dialogContext,
+    StateSetter dialogSetState,
+  ) async {
     final pickedTime = await showTimePicker(
-      context: context,
+      context: dialogContext,
       initialTime: _startTime,
     );
 
     if (pickedTime != null) {
-      setState(() {
+      dialogSetState(() {
         _startTime = pickedTime;
 
         // If end time is before start time, adjust it
@@ -198,14 +201,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  Future<void> _selectEndTime() async {
+  Future<void> _selectEndTime(
+    BuildContext dialogContext,
+    StateSetter dialogSetState,
+  ) async {
     final pickedTime = await showTimePicker(
-      context: context,
+      context: dialogContext,
       initialTime: _endTime,
     );
 
     if (pickedTime != null) {
-      setState(() {
+      dialogSetState(() {
         _endTime = pickedTime;
       });
     }
@@ -217,7 +223,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       builder:
           (context) => StatefulBuilder(
             builder:
-                (context, setState) => AlertDialog(
+                (context, dialogSetState) => AlertDialog(
                   title: Text('Mark Time as Unavailable'),
                   content: SingleChildScrollView(
                     child: Column(
@@ -232,7 +238,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           title: Text('All Day'),
                           value: _isAllDay,
                           onChanged: (value) {
-                            setState(() {
+                            dialogSetState(() {
                               _isAllDay = value;
                             });
                           },
@@ -244,14 +250,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               'Start Time: ${_startTime.format(context)}',
                             ),
                             trailing: Icon(Icons.access_time),
-                            onTap: _selectStartTime,
+                            onTap:
+                                () => _selectStartTime(context, dialogSetState),
                           ),
                           ListTile(
                             title: Text(
                               'End Time: ${_endTime.format(context)}',
                             ),
                             trailing: Icon(Icons.access_time),
-                            onTap: _selectEndTime,
+                            onTap:
+                                () => _selectEndTime(context, dialogSetState),
                           ),
                         ],
                       ],
