@@ -26,7 +26,7 @@ class CalendarService {
 
   Future<List<BusyTimeSlot>> getBusyTimeSlots() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/busy-slots'));
+      final response = await http.get(Uri.parse('$baseUrl/busy-time-slots'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -52,7 +52,7 @@ class CalendarService {
       final endTimeUtc = _formatDateForApi(endTime);
 
       final response = await http.post(
-        Uri.parse('$baseUrl/busy-slots'),
+        Uri.parse('$baseUrl/busy-time-slots'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'startTime': startTimeUtc,
@@ -81,7 +81,7 @@ class CalendarService {
       final endTime = DateTime.utc(date.year, date.month, date.day, 23, 59, 59);
 
       final response = await http.post(
-        Uri.parse('$baseUrl/busy-slots'),
+        Uri.parse('$baseUrl/busy-time-slots'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'startTime': _apiDateFormat.format(startTime),
@@ -105,7 +105,9 @@ class CalendarService {
 
   Future<void> markAvailable(String id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/busy-slots/$id'));
+      final response = await http.delete(
+        Uri.parse('$baseUrl/busy-time-slots/$id'),
+      );
 
       if (response.statusCode != 200) {
         throw Exception(
@@ -128,7 +130,7 @@ class CalendarService {
 
       final response = await http.get(
         Uri.parse(
-          '$baseUrl/busy-slots?startDate=$startDateUtc&endDate=$endDateUtc',
+          '$baseUrl/busy-time-slots?startDate=$startDateUtc&endDate=$endDateUtc',
         ),
       );
 
