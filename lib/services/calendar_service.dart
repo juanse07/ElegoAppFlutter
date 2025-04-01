@@ -8,11 +8,11 @@ import '../models/calendar_model.dart';
 
 class CalendarService {
   static String get baseUrl => '${dotenv.env['API_URL']}/calendar';
+
   final DateFormat _apiDateFormat = DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
   // Helper method to convert local DateTime to UTC ISO8601 string
   String _formatDateForApi(DateTime dateTime) {
-    // Convert to UTC and format as ISO8601
     final utcDateTime = dateTime.toUtc();
     return _apiDateFormat.format(utcDateTime);
   }
@@ -26,7 +26,10 @@ class CalendarService {
 
   Future<List<BusyTimeSlot>> getBusyTimeSlots() async {
     try {
+      print('Fetching busy time slots from: $baseUrl/busy-time-slots');
       final response = await http.get(Uri.parse('$baseUrl/busy-time-slots'));
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -34,11 +37,12 @@ class CalendarService {
           ..sort((a, b) => a.startTime.compareTo(b.startTime));
       } else {
         throw Exception(
-          'Failed to load busy time slots: ${response.statusCode}',
+          'Failed to load busy time slots: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      throw Exception('Failed to load busy time slots: $e');
+      print('Error in getBusyTimeSlots: $e');
+      rethrow;
     }
   }
 
@@ -47,9 +51,16 @@ class CalendarService {
     DateTime endTime,
   ) async {
     try {
-      // Convert local times to UTC ISO8601 strings
+      print('Marking time as unavailable...');
+      print('Start time: $startTime');
+      print('End time: $endTime');
+
       final startTimeUtc = _formatDateForApi(startTime);
       final endTimeUtc = _formatDateForApi(endTime);
+
+      print('Formatted start time: $startTimeUtc');
+      print('Formatted end time: $endTimeUtc');
+      print('Sending request to: $baseUrl/busy-time-slots');
 
       final response = await http.post(
         Uri.parse('$baseUrl/busy-time-slots'),
@@ -61,24 +72,31 @@ class CalendarService {
         }),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
         return BusyTimeSlot.fromJson(data);
       } else {
         throw Exception(
-          'Failed to mark time as unavailable: ${response.statusCode}',
+          'Failed to mark time as unavailable: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      throw Exception('Failed to mark time as unavailable: $e');
+      print('Error in markUnavailable: $e');
+      rethrow;
     }
   }
 
   Future<BusyTimeSlot> markDayUnavailable(DateTime date) async {
     try {
-      // Create start and end times for the entire day in UTC
+      print('Marking day as unavailable: $date');
       final startTime = DateTime.utc(date.year, date.month, date.day);
       final endTime = DateTime.utc(date.year, date.month, date.day, 23, 59, 59);
+
+      print('Start time UTC: $startTime');
+      print('End time UTC: $endTime');
 
       final response = await http.post(
         Uri.parse('$baseUrl/busy-time-slots'),
@@ -90,32 +108,41 @@ class CalendarService {
         }),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
         return BusyTimeSlot.fromJson(data);
       } else {
         throw Exception(
-          'Failed to mark day as unavailable: ${response.statusCode}',
+          'Failed to mark day as unavailable: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      throw Exception('Failed to mark day as unavailable: $e');
+      print('Error in markDayUnavailable: $e');
+      rethrow;
     }
   }
 
   Future<void> markAvailable(String id) async {
     try {
+      print('Marking time slot available: $id');
       final response = await http.delete(
         Uri.parse('$baseUrl/busy-time-slots/$id'),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode != 200) {
         throw Exception(
-          'Failed to mark time as available: ${response.statusCode}',
+          'Failed to mark time as available: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      throw Exception('Failed to mark time as available: $e');
+      print('Error in markAvailable: $e');
+      rethrow;
     }
   }
 
@@ -124,15 +151,24 @@ class CalendarService {
     DateTime endDate,
   ) async {
     try {
-      // Convert local dates to UTC ISO8601 strings
+      print('Fetching busy time slots for range:');
+      print('Start date: $startDate');
+      print('End date: $endDate');
+
       final startDateUtc = _formatDateForApi(startDate);
       final endDateUtc = _formatDateForApi(endDate);
 
-      final response = await http.get(
-        Uri.parse(
-          '$baseUrl/busy-time-slots?startDate=$startDateUtc&endDate=$endDateUtc',
-        ),
-      );
+      print('Formatted start date: $startDateUtc');
+      print('Formatted end date: $endDateUtc');
+
+      final url =
+          '$baseUrl/busy-time-slots?startDate=$startDateUtc&endDate=$endDateUtc';
+      print('Request URL: $url');
+
+      final response = await http.get(Uri.parse(url));
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -140,11 +176,12 @@ class CalendarService {
           ..sort((a, b) => a.startTime.compareTo(b.startTime));
       } else {
         throw Exception(
-          'Failed to load busy time slots: ${response.statusCode}',
+          'Failed to load busy time slots: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      throw Exception('Failed to load busy time slots: $e');
+      print('Error in getBusyTimeSlotsForRange: $e');
+      rethrow;
     }
   }
 
