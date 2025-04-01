@@ -8,9 +8,6 @@ class BusyTimeSlot {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  // Preset message for all busy slots
-  static const String defaultMessage = 'Marked unavailable by Pro';
-
   BusyTimeSlot({
     required this.id,
     required this.startTime,
