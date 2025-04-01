@@ -94,8 +94,10 @@ class CalendarService {
   Future<BusyTimeSlot> markDayUnavailable(DateTime date) async {
     try {
       print('Marking day as unavailable: $date');
-      final startTime = DateTime.utc(date.year, date.month, date.day);
-      final endTime = DateTime.utc(date.year, date.month, date.day, 23, 59, 59);
+      // Set start time to 8 AM UTC
+      final startTime = DateTime.utc(date.year, date.month, date.day, 8, 0);
+      // Set end time to 6 PM UTC
+      final endTime = DateTime.utc(date.year, date.month, date.day, 18, 0);
 
       print('Start time UTC: $startTime');
       print('End time UTC: $endTime');
