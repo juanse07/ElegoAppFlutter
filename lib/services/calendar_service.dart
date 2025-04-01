@@ -94,20 +94,39 @@ class CalendarService {
   Future<BusyTimeSlot> markDayUnavailable(DateTime date) async {
     try {
       print('Marking day as unavailable: $date');
-      // Set start time to 8 AM UTC
-      final startTime = DateTime.utc(date.year, date.month, date.day, 8, 0);
-      // Set end time to 6 PM UTC
-      final endTime = DateTime.utc(date.year, date.month, date.day, 18, 0);
 
-      print('Start time UTC: $startTime');
-      print('End time UTC: $endTime');
+      // Create local DateTime for 8 AM and 6 PM
+      final localStartTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        8, // 8 AM
+        0,
+      );
+      final localEndTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        18, // 6 PM
+        0,
+      );
+
+      print('Local start time: $localStartTime');
+      print('Local end time: $localEndTime');
+
+      // Convert to UTC for API
+      final startTimeUtc = _formatDateForApi(localStartTime);
+      final endTimeUtc = _formatDateForApi(localEndTime);
+
+      print('UTC start time: $startTimeUtc');
+      print('UTC end time: $endTimeUtc');
 
       final response = await http.post(
         Uri.parse('$baseUrl/busy-time-slots'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'startTime': _apiDateFormat.format(startTime),
-          'endTime': _apiDateFormat.format(endTime),
+          'startTime': startTimeUtc,
+          'endTime': endTimeUtc,
           'isAllDay': true,
           'title': 'Unavailable',
         }),
