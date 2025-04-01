@@ -18,11 +18,15 @@ class BusyTimeSlot {
   });
 
   factory BusyTimeSlot.fromJson(Map<String, dynamic> json) {
+    // Parse UTC dates from API
+    final startTimeUtc = DateTime.parse(json['startTime'] as String);
+    final endTimeUtc = DateTime.parse(json['endTime'] as String);
+
     return BusyTimeSlot(
       id: json['_id'] as String,
-      // Parse UTC dates from API and convert to local time
-      startTime: DateTime.parse(json['startTime'] as String).toLocal(),
-      endTime: DateTime.parse(json['endTime'] as String).toLocal(),
+      // Convert UTC to local time
+      startTime: startTimeUtc.toLocal(),
+      endTime: endTimeUtc.toLocal(),
       isAllDay: json['isAllDay'] as bool? ?? false,
       createdAt: DateTime.now(), // Use current time if not provided
       updatedAt: DateTime.now(), // Use current time if not provided
