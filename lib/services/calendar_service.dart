@@ -1,12 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import '../models/calendar_model.dart';
 
 class CalendarService {
-  static const String baseUrl = 'http://localhost:3000/api/calendar';
+  static String get baseUrl => '${dotenv.env['API_URL']}/calendar';
   final DateFormat _apiDateFormat = DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
   // Helper method to convert local DateTime to UTC ISO8601 string

@@ -3,14 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'screens/home_screen.dart';
 
-void main() async {
-  try {
-    await dotenv.load(fileName: ".env");
-    print("Loaded .env file");
-  } catch (e) {
-    print("Error loading .env file: $e");
-    // Continue without .env file
-  }
+Future<void> main() async {
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -21,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Service Request App',
+      title: 'Elego',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -38,8 +32,8 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const HomeScreen(),
     );
