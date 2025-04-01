@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class BusyTimeSlot {
   final String id;
   final DateTime startTime;
@@ -34,15 +36,16 @@ class BusyTimeSlot {
 
       try {
         if (dateValue is String) {
-          return DateTime.parse(dateValue);
+          return DateTime.parse(dateValue).toLocal();
         } else if (dateValue is Map && dateValue['\$date'] != null) {
           if (dateValue['\$date'] is String) {
-            return DateTime.parse(dateValue['\$date']);
+            return DateTime.parse(dateValue['\$date']).toLocal();
           } else if (dateValue['\$date'] is Map &&
               dateValue['\$date']['\$numberLong'] != null) {
             return DateTime.fromMillisecondsSinceEpoch(
               int.parse(dateValue['\$date']['\$numberLong']),
-            );
+              isUtc: true,
+            ).toLocal();
           }
         }
       } catch (e) {
@@ -63,13 +66,40 @@ class BusyTimeSlot {
   }
 
   Map<String, dynamic> toJson() {
+    // Convert local time to UTC for consistent API communication
     return {
-      'startTime': startTime.toIso8601String(),
-      'endTime': endTime.toIso8601String(),
+      'startTime': startTime.toUtc().toIso8601String(),
+      'endTime': endTime.toUtc().toIso8601String(),
       'title': title,
       'description': description,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
+  }
+
+  // Helper method for formatting date and time for display
+  String formatStartTime(String format) {
+    final formatter = DateFormat(format);
+    return formatter.format(startTime);
+  }
+
+  // Helper method for formatting date and time for display
+  String formatEndTime(String format) {
+    final formatter = DateFormat(format);
+    return formatter.format(endTime);
+  }
+
+  // Format just the date portion
+  String get formattedDate {
+    return DateFormat('yyyy-MM-dd').format(startTime);
+  }
+
+  // Format just the time portion
+  String get formattedStartTime {
+    return DateFormat('HH:mm').format(startTime);
+  }
+
+  String get formattedEndTime {
+    return DateFormat('HH:mm').format(endTime);
   }
 }

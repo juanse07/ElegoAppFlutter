@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../models/calendar_model.dart';
 
@@ -42,10 +43,14 @@ class CalendarService {
   Future<BusyTimeSlot> createBusyTimeSlot(BusyTimeSlot timeSlot) async {
     try {
       final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint');
+
+      // Ensure all dates are properly formatted for the API
+      final jsonBody = timeSlot.toJson();
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(timeSlot.toJson()),
+        body: jsonEncode(jsonBody),
       );
 
       if (response.statusCode != 201) {
@@ -85,10 +90,14 @@ class CalendarService {
   ) async {
     try {
       final url = Uri.parse('$apiFullUrl$busyTimeSlotsEndpoint/$id');
+
+      // Ensure all dates are properly formatted for the API
+      final jsonBody = timeSlot.toJson();
+
       final response = await http.put(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(timeSlot.toJson()),
+        body: jsonEncode(jsonBody),
       );
 
       if (response.statusCode != 200) {
@@ -110,8 +119,9 @@ class CalendarService {
     DateTime end,
   ) async {
     try {
-      final startStr = start.toIso8601String();
-      final endStr = end.toIso8601String();
+      // Ensure dates are in UTC ISO8601 format for the API
+      final startStr = start.toUtc().toIso8601String();
+      final endStr = end.toUtc().toIso8601String();
 
       final url = Uri.parse(
         '$apiFullUrl$busyTimeSlotsEndpoint?startTime=$startStr&endTime=$endStr',
@@ -136,6 +146,64 @@ class CalendarService {
       return timeSlots;
     } catch (e) {
       print('Exception during getBusyTimeSlotsForRange: $e');
+      rethrow;
+    }
+  }
+
+  // Helper method to format date for API requests
+  String formatDateForApi(DateTime date) {
+    return date.toUtc().toIso8601String();
+  }
+
+  // Create a new busy time slot with formatted date/time strings
+  Future<BusyTimeSlot> createBusyTimeSlotWithStrings(
+    String date,
+    String startTime,
+    String endTime,
+    String title,
+    String description,
+  ) async {
+    try {
+      // Parse the input strings to a DateTime
+      final DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+      final DateFormat timeFormat = DateFormat('HH:mm');
+
+      final DateTime parsedDate = dateFormat.parse(date);
+
+      // Parse start time and combine with date
+      final DateTime parsedStartTime = timeFormat.parse(startTime);
+      final DateTime startDateTime = DateTime(
+        parsedDate.year,
+        parsedDate.month,
+        parsedDate.day,
+        parsedStartTime.hour,
+        parsedStartTime.minute,
+      );
+
+      // Parse end time and combine with date
+      final DateTime parsedEndTime = timeFormat.parse(endTime);
+      final DateTime endDateTime = DateTime(
+        parsedDate.year,
+        parsedDate.month,
+        parsedDate.day,
+        parsedEndTime.hour,
+        parsedEndTime.minute,
+      );
+
+      // Create a BusyTimeSlot with the properly parsed dates
+      final timeSlot = BusyTimeSlot(
+        id: '', // ID will be assigned by the server
+        startTime: startDateTime,
+        endTime: endDateTime,
+        title: title,
+        description: description,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      return await createBusyTimeSlot(timeSlot);
+    } catch (e) {
+      print('Exception during createBusyTimeSlotWithStrings: $e');
       rethrow;
     }
   }
