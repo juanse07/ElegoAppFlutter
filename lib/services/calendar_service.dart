@@ -7,7 +7,8 @@ import 'package:intl/intl.dart';
 import '../models/calendar_model.dart';
 
 class CalendarService {
-  static String get baseUrl => '${dotenv.env['API_URL']}/calendar';
+  static String get baseUrl =>
+      dotenv.env['API_URL'] ?? 'https://api.elegoprime.com';
 
   final DateFormat _apiDateFormat = DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
