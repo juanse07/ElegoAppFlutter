@@ -4,7 +4,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+    print("Loaded .env file successfully");
+  } catch (e) {
+    print("Error loading .env file: $e");
+    // Set default API URL if .env fails to load
+    dotenv.env['API_URL'] = 'https://api.elegoprime.com';
+  }
+
   runApp(const MyApp());
 }
 
