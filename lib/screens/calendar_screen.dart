@@ -34,7 +34,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _startTime = TimeOfDay.now();
     _endTime = TimeOfDay(hour: TimeOfDay.now().hour + 1, minute: 0);
 
-    _loadBusyTimeSlots();
+    // Initialize with empty list and false loading state
+    _busyTimeSlots = [];
+    _isLoading = false;
+
+    // Load busy time slots after widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadBusyTimeSlots();
+    });
   }
 
   @override
@@ -43,25 +50,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _loadBusyTimeSlots() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
+      print('Loading busy time slots...');
       // Get the first and last day of the month
       final firstDay = DateTime(_focusedDay.year, _focusedDay.month, 1);
       final lastDay = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
 
+      print('Date range: $firstDay to $lastDay');
       final timeSlots = await _calendarService.getBusyTimeSlotsForRange(
         firstDay,
         lastDay,
       );
 
+      if (!mounted) return;
+
       setState(() {
         _busyTimeSlots = timeSlots;
         _isLoading = false;
       });
+      print('Loaded ${timeSlots.length} busy time slots');
     } catch (e) {
+      print('Error loading busy time slots: $e');
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -292,56 +309,56 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ],
       ),
-      body:
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : Column(
-                children: [
-                  TableCalendar(
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    focusedDay: _focusedDay,
-                    calendarFormat: _calendarFormat,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    onFormatChanged: (format) {
-                      setState(() {
-                        _calendarFormat = format;
-                      });
-                    },
-                    onPageChanged: (focusedDay) {
-                      _focusedDay = focusedDay;
-                      _loadBusyTimeSlots();
-                    },
-                    eventLoader: _getEventsForDay,
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _getEventsForDay(_selectedDay).length,
-                      itemBuilder: (context, index) {
-                        final slot = _getEventsForDay(_selectedDay)[index];
-                        return ListTile(
-                          title: Text(BusyTimeSlot.defaultMessage),
-                          subtitle: Text(
-                            slot.isAllDay
-                                ? 'All Day'
-                                : '${slot.formattedStartTime} - ${slot.formattedEndTime}',
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => _markTimeAvailable(slot),
-                          ),
-                        );
-                      },
+      body: Column(
+        children: [
+          TableCalendar(
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+            },
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+            onPageChanged: (focusedDay) {
+              _focusedDay = focusedDay;
+              _loadBusyTimeSlots();
+            },
+            eventLoader: _getEventsForDay,
+          ),
+          if (_isLoading)
+            const Expanded(child: Center(child: CircularProgressIndicator()))
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _getEventsForDay(_selectedDay).length,
+                itemBuilder: (context, index) {
+                  final slot = _getEventsForDay(_selectedDay)[index];
+                  return ListTile(
+                    title: Text(BusyTimeSlot.defaultMessage),
+                    subtitle: Text(
+                      slot.isAllDay
+                          ? 'All Day'
+                          : '${slot.formattedStartTime} - ${slot.formattedEndTime}',
                     ),
-                  ),
-                ],
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () => _markTimeAvailable(slot),
+                    ),
+                  );
+                },
               ),
+            ),
+        ],
+      ),
     );
   }
 }
