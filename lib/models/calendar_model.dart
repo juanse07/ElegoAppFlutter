@@ -24,8 +24,8 @@ class BusyTimeSlot {
       startTime: DateTime.parse(json['startTime'] as String).toLocal(),
       endTime: DateTime.parse(json['endTime'] as String).toLocal(),
       isAllDay: json['isAllDay'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
-      updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
+      createdAt: DateTime.now(), // Use current time if not provided
+      updatedAt: DateTime.now(), // Use current time if not provided
     );
   }
 
