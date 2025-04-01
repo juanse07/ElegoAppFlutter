@@ -70,6 +70,7 @@ class CalendarService {
           'startTime': startTimeUtc,
           'endTime': endTimeUtc,
           'isAllDay': false,
+          'title': 'Unavailable',
         }),
       );
 
@@ -106,6 +107,7 @@ class CalendarService {
           'startTime': _apiDateFormat.format(startTime),
           'endTime': _apiDateFormat.format(endTime),
           'isAllDay': true,
+          'title': 'Unavailable',
         }),
       );
 
