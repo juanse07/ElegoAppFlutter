@@ -297,6 +297,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  Widget _buildEventList() {
+    final events = _getEventsForDay(_selectedDay);
+    if (events.isEmpty) {
+      return const Center(child: Text('No unavailable times for this day'));
+    }
+
+    return ListView.builder(
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        final event = events[index];
+        return ListTile(
+          title: Text(
+            event.isAllDay
+                ? 'All Day'
+                : '${event.formattedStartTime} - ${event.formattedEndTime}',
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _markTimeAvailable(event),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -337,26 +362,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           if (_isLoading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else
-            Expanded(
-              child: ListView.builder(
-                itemCount: _getEventsForDay(_selectedDay).length,
-                itemBuilder: (context, index) {
-                  final slot = _getEventsForDay(_selectedDay)[index];
-                  return ListTile(
-                    title: Text(BusyTimeSlot.defaultMessage),
-                    subtitle: Text(
-                      slot.isAllDay
-                          ? 'All Day'
-                          : '${slot.formattedStartTime} - ${slot.formattedEndTime}',
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _markTimeAvailable(slot),
-                    ),
-                  );
-                },
-              ),
-            ),
+            Expanded(child: _buildEventList()),
         ],
       ),
     );
