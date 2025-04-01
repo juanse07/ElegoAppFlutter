@@ -21,8 +21,16 @@ class BusyTimeSlot {
     // Parse UTC dates from API
     final startTimeUtc = DateTime.parse(json['startTime'] as String);
     final endTimeUtc = DateTime.parse(json['endTime'] as String);
-    final createdAtUtc = DateTime.parse(json['createdAt'] as String);
-    final updatedAtUtc = DateTime.parse(json['updatedAt'] as String);
+
+    // Handle optional createdAt and updatedAt fields
+    final createdAtUtc =
+        json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now();
+    final updatedAtUtc =
+        json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'] as String)
+            : DateTime.now();
 
     return BusyTimeSlot(
       id: json['_id'] as String,
