@@ -21,6 +21,8 @@ class BusyTimeSlot {
     // Parse UTC dates from API
     final startTimeUtc = DateTime.parse(json['startTime'] as String);
     final endTimeUtc = DateTime.parse(json['endTime'] as String);
+    final createdAtUtc = DateTime.parse(json['createdAt'] as String);
+    final updatedAtUtc = DateTime.parse(json['updatedAt'] as String);
 
     return BusyTimeSlot(
       id: json['_id'] as String,
@@ -28,8 +30,8 @@ class BusyTimeSlot {
       startTime: startTimeUtc.toLocal(),
       endTime: endTimeUtc.toLocal(),
       isAllDay: json['isAllDay'] as bool? ?? false,
-      createdAt: DateTime.now(), // Use current time if not provided
-      updatedAt: DateTime.now(), // Use current time if not provided
+      createdAt: createdAtUtc.toLocal(),
+      updatedAt: updatedAtUtc.toLocal(),
     );
   }
 
