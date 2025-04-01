@@ -156,14 +156,14 @@ class CalendarService {
       print('Start date: $startDate');
       print('End date: $endDate');
 
-      final startDateUtc = _formatDateForApi(startDate);
-      final endDateUtc = _formatDateForApi(endDate);
+      final startTimeUtc = _formatDateForApi(startDate);
+      final endTimeUtc = _formatDateForApi(endDate);
 
-      print('Formatted start date: $startDateUtc');
-      print('Formatted end date: $endDateUtc');
+      print('Formatted start time: $startTimeUtc');
+      print('Formatted end time: $endTimeUtc');
 
       final url =
-          '$baseUrl/busy-time-slots?startDate=$startDateUtc&endDate=$endDateUtc';
+          '$baseUrl/busy-time-slots?startTime=$startTimeUtc&endTime=$endTimeUtc';
       print('Request URL: $url');
 
       final response = await http.get(Uri.parse(url));
